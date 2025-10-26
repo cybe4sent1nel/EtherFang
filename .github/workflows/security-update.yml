@@ -1,0 +1,68 @@
+name: Security Update Check
+
+on:
+  schedule:
+    # Runs every 6 hours at 12:00 AM, 6:00 AM, 12:00 PM, 6:00 PM IST (Kolkata)
+    - cron: '30 18 * * *'  # 12:00 AM IST
+    - cron: '30 0 * * *'   # 6:00 AM IST
+    - cron: '30 6 * * *'   # 12:00 PM IST
+    - cron: '30 12 * * *'  # 6:00 PM IST
+  workflow_dispatch:
+
+jobs:
+  check-vulnerabilities:
+    runs-on: ubuntu-latest
+    name: Check for Known Vulnerabilities
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install safety
+        run: pip install safety
+      
+      - name: Check Python dependencies for vulnerabilities
+        run: |
+          if [ -f "requirements.txt" ]; then
+            echo "Scanning requirements.txt for vulnerabilities..."
+            safety check -r requirements.txt --json > safety-report.json || true
+            cat safety-report.json
+          else
+            echo "No requirements.txt found"
+          fi
+      
+      - name: Scan bash scripts for security issues
+        run: |
+          echo "Scanning bash scripts for security issues..."
+          
+          # Check for hardcoded credentials
+          if grep -r "password\|passwd\|pwd\|key\|token\|secret" *.sh | grep -E "=\s*['\"]"; then
+            echo "⚠️ Warning: Potential hardcoded credentials found"
+            exit 1
+          fi
+          
+          # Check for insecure practices
+          if grep -r "sudo\|root" *.sh; then
+            echo "ℹ️ Info: Script uses elevated privileges"
+          fi
+          
+          # Check for command injection vulnerabilities
+          if grep -r "eval\|\$(\|backtick" *.sh; then
+            echo "⚠️ Warning: Potential command injection vulnerabilities detected"
+          fi
+      
+      - name: Create issue if vulnerabilities found
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔒 Security Update Required',
+              body: 'A security scan has detected potential vulnerabilities. Review the workflow run for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+              labels: ['security', 'critical']
+            })
