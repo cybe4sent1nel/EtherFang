@@ -62,11 +62,7 @@ All the needed info about how to "install | use | enjoy" `EtherFang` is present 
   - [Hat Tip To]
   - [Inspiration]
 
----]: #
-[]: #
-[]: #
-[]: #
-[]: #
+
 [github's wiki]: https://github.com/cybe4sent1nel/EtherFang/wiki
 [home]: https://www.google.com/search?q=https://github.com/cybe4sent1nel/EtherFang/wiki/Home
 [features]: https://www.google.com/search?q=https://github.com/cybe4sent1nel/EtherFang/wiki/Features
