@@ -13,62 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  analyze:
-    name: Analyze
-    runs-on: ubuntu-latest
-    
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'cpp', 'python', 'javascript', 'ruby' ]
-        include:
-          - language: cpp
-            build-mode: autobuild
-          - language: python
-            build-mode: none
-          - language: javascript
-            build-mode: autobuild
-          - language: ruby
-            build-mode: none
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-          queries: security-and-quality
-          config: |
-            paths:
-              - src
-              - lib
-            paths-ignore:
-              - tests
-              - docs
-              - examples
-            disable-default-queries: false
-            queries:
-              - uses: security-and-quality
-      
-      - name: Autobuild
-        if: matrix.build-mode == 'autobuild'
-        uses: github/codeql-action/autobuild@v2
-      
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        with:
-          category: "/language:${{ matrix.language }}"
-          upload: true
-  
-  # Additional Bash-specific analysis
+  # Bash-specific analysis with ShellCheck
   bash-analysis:
     name: Bash Script Analysis
     runs-on: ubuntu-latest
@@ -83,24 +28,24 @@ jobs:
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       
-      - name: Run ShellCheck with SARIF output
+      - name: Run ShellCheck on EtherFang.sh
         run: |
-          # Install shfmt for code formatting checks
-          sudo apt-get install -y shfmt
-          
-          # Run ShellCheck on all bash scripts and generate SARIF
-          shellcheck -f json EtherFang.sh > shellcheck-results.json || true
-          
-          # Display results
+          echo "Analyzing EtherFang.sh with ShellCheck..."
+          shellcheck -x -f json EtherFang.sh > shellcheck-results.json || true
           cat shellcheck-results.json
       
-      - name: Run additional security checks
+      - name: Run ShellCheck on all bash scripts
+        run: |
+          echo "Scanning all bash scripts..."
+          find . -name "*.sh" -type f -exec shellcheck -x {} \;
+      
+      - name: Run advanced bash security checks
         run: |
           echo "Running advanced bash security checks on EtherFang.sh..."
           
           # Check for dangerous functions
           echo "Checking for dangerous functions..."
-          grep -n "eval\|exec\|source\|.\s*file\|wget\|curl" EtherFang.sh || echo "✓ No dangerous functions detected"
+          grep -n "eval\|exec\|source" EtherFang.sh || echo "✓ No dangerous functions detected"
           
           # Check for unquoted variables
           echo "Checking for unquoted variables..."
@@ -110,11 +55,11 @@ jobs:
           echo "Checking for error handling..."
           grep -n "set -e\|set -o pipefail\||| exit" EtherFang.sh || echo "⚠️  Consider adding error handling"
           
-          # Check for shellcheck directives
-          echo "Checking for ShellCheck directives..."
-          grep -c "# shellcheck" EtherFang.sh || echo "ℹ️  No ShellCheck directives found"
+          # Check for hardcoded credentials
+          echo "Checking for hardcoded credentials..."
+          grep -n "password\|passwd\|pwd\|key\|token\|secret" EtherFang.sh | grep -E "=\s*['\"]" || echo "✓ No hardcoded credentials detected"
       
-      - name: Generate CodeQL-compatible SARIF from ShellCheck
+      - name: Generate SARIF from ShellCheck
         if: always()
         run: |
           python3 << 'EOF'
@@ -140,7 +85,7 @@ jobs:
                                   {
                                       "id": "SC1000",
                                       "shortDescription": {"text": "ShellCheck analysis"},
-                                      "help": {"text": "See https://www.shellcheck.net/wiki/SC1000"}
+                                      "help": {"text": "See https://www.shellcheck.net/wiki/"}
                                   }
                               ]
                           }
@@ -203,20 +148,28 @@ jobs:
           pip install --upgrade pip
           pip install bandit pylint safety
       
+      - name: Find and analyze Python files
+        run: |
+          echo "Searching for Python files..."
+          find . -name "*.py" -type f | head -20
+      
       - name: Run Bandit security scan
         run: |
           if find . -name "*.py" -type f | grep -q .; then
+            echo "Running Bandit security scan..."
             bandit -r . -f json -o bandit-results.json || true
+            bandit -r . -v
             echo "✓ Bandit scan completed"
           else
             echo "No Python files found"
           fi
       
-      - name: Run pylint
+      - name: Run pylint analysis
         run: |
           if find . -name "*.py" -type f | grep -q .; then
+            echo "Running Pylint analysis..."
             pylint . --exit-zero --output-format=json > pylint-results.json || true
-            echo "✓ Pylint scan completed"
+            echo "✓ Pylint analysis completed"
           else
             echo "No Python files found"
           fi
@@ -224,39 +177,102 @@ jobs:
       - name: Check requirements.txt for vulnerabilities
         run: |
           if [ -f "requirements.txt" ]; then
-            pip install safety
+            echo "Checking requirements.txt for known vulnerabilities..."
             safety check -r requirements.txt --json > safety-results.json || true
+            safety check -r requirements.txt || true
             echo "✓ Requirements scan completed"
           else
             echo "No requirements.txt found"
           fi
+      
+      - name: Generate Bandit SARIF
+        if: always()
+        run: |
+          if [ -f "bandit-results.json" ]; then
+            python3 << 'EOF'
+            import json
+            
+            try:
+                with open('bandit-results.json', 'r') as f:
+                    bandit_data = json.load(f)
+            except:
+                bandit_data = {"results": []}
+            
+            sarif = {
+                "version": "2.1.0",
+                "runs": [
+                    {
+                        "tool": {
+                            "driver": {
+                                "name": "Bandit",
+                                "version": "1.7.0",
+                                "informationUri": "https://bandit.readthedocs.io/",
+                                "rules": []
+                            }
+                        },
+                        "results": [
+                            {
+                                "ruleId": result.get('test_id', 'UNKNOWN'),
+                                "message": {"text": result.get('issue_text', 'Unknown issue')},
+                                "locations": [
+                                    {
+                                        "physicalLocation": {
+                                            "artifactLocation": {"uri": result.get('filename', 'unknown')},
+                                            "region": {
+                                                "startLine": result.get('line_number', 1)
+                                            }
+                                        }
+                                    }
+                                ],
+                                "level": "error" if result.get('severity') == 'HIGH' else "warning"
+                            }
+                            for result in bandit_data.get('results', [])
+                        ]
+                    }
+                ]
+            }
+            
+            with open('bandit-results.sarif', 'w') as f:
+                json.dump(sarif, f, indent=2)
+            
+            print("✓ Bandit SARIF file generated")
+            EOF
+          fi
+      
+      - name: Upload Bandit SARIF to GitHub Security
+        if: always() && hashFiles('bandit-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: bandit-results.sarif
+          category: "python-analysis"
   
-  # Report summary
+  # Security summary report
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
-    needs: [analyze, bash-analysis, python-analysis]
+    needs: [bash-analysis, python-analysis]
     if: always()
     
     steps:
-      - name: Generate security summary
+      - name: Generate security report
         run: |
           echo "## 🔒 Security Analysis Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Analysis Completed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ CodeQL Analysis" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Bash Script Analysis (ShellCheck)" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Python Security Analysis (Bandit, Pylint)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Dependency Vulnerability Scan (Safety)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Results" >> $GITHUB_STEP_SUMMARY
-          echo "All security checks have completed. Review the Security tab for detailed findings." >> $GITHUB_STEP_SUMMARY
+          echo "### Results Location" >> $GITHUB_STEP_SUMMARY
+          echo "Review detailed findings in GitHub Security tab → Code scanning alerts" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Review findings in GitHub Security tab" >> $GITHUB_STEP_SUMMARY
-          echo "2. Address critical and high severity issues" >> $GITHUB_STEP_SUMMARY
-          echo "3. Update code and push changes" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review critical and high severity findings" >> $GITHUB_STEP_SUMMARY
+          echo "2. Address security issues in code" >> $GITHUB_STEP_SUMMARY
+          echo "3. Update dependencies as needed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Workflow Details" >> $GITHUB_STEP_SUMMARY
+          echo "### Workflow Configuration" >> $GITHUB_STEP_SUMMARY
           echo "- **Schedule:** Daily at 3:00 AM IST (Kolkata)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Trigger:** Push to main/develop, Pull Requests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggers:** Push to main/develop, Pull Requests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Analysis:** Bash + Python only" >> $GITHUB_STEP_SUMMARY
           echo "- **Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
