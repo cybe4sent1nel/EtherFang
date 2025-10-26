@@ -1,0 +1,85 @@
+version: 2
+updates:
+  # Check for GitHub Actions updates
+  # Runs every Monday at 9:00 AM IST (Kolkata)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:30"
+    open-pull-requests-limit: 5
+    pull-request-branch-name:
+      separator: "/"
+    reviewers:
+      - "cybe4sent1nel"
+    assignees:
+      - "cybe4sent1nel"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci:"
+      include: "scope"
+    allow:
+      - dependency-type: "all"
+  
+  # Check for pip dependencies (if Python is used)
+  # Runs every Monday at 9:30 AM IST (Kolkata)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "cybe4sent1nel"
+    assignees:
+      - "cybe4sent1nel"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps:"
+      include: "scope"
+    allow:
+      - dependency-type: "direct"
+  
+  # Check for Docker base image updates (if Docker is used)
+  # Runs every Monday at 10:00 AM IST (Kolkata)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:30"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "cybe4sent1nel"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "docker:"
+      include: "scope"
+  
+  # Check for npm dependencies (if Node.js is used)
+  # Runs every Monday at 10:30 AM IST (Kolkata)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "cybe4sent1nel"
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "deps:"
+      include: "scope"
+    allow:
+      - dependency-type: "direct"
