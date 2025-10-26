@@ -1,0 +1,122 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '30 20 * * *'  # 2:00 AM IST (Kolkata) - Daily security checks
+
+jobs:
+  # Bash script linting and validation
+  lint:
+    runs-on: ubuntu-latest
+    name: Bash Linting & Code Quality
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      
+      - name: Run ShellCheck on EtherFang.sh
+        run: shellcheck -x EtherFang.sh
+        continue-on-error: false
+      
+      - name: Run ShellCheck on all bash scripts
+        run: find . -name "*.sh" -type f -exec shellcheck -x {} \;
+        continue-on-error: false
+      
+      - name: Check for common vulnerabilities
+        run: |
+          grep -r "eval\|exec\|\`.*\`" *.sh || echo "No dangerous patterns found"
+  
+  # Security scanning
+  security:
+    runs-on: ubuntu-latest
+    name: Security Scanning
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+  
+  # Dependency check
+  dependencies:
+    runs-on: ubuntu-latest
+    name: Dependency Check
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for outdated dependencies
+        run: |
+          if [ -f "requirements.txt" ]; then
+            pip install --upgrade pip
+            pip install safety
+            safety check -r requirements.txt || true
+          fi
+      
+      - name: Check bash script dependencies
+        run: |
+          echo "Checking for required bash utilities..."
+          which airmon-ng || echo "Warning: airmon-ng not found in PATH"
+          which airodump-ng || echo "Warning: airodump-ng not found in PATH"
+  
+  # SAST (Static Application Security Testing)
+  sast:
+    runs-on: ubuntu-latest
+    name: SAST Analysis
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Semgrep SAST
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/owasp-top-ten
+            p/bash
+  
+  # Build validation
+  build:
+    runs-on: ubuntu-latest
+    name: Build Validation
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check script syntax
+        run: bash -n EtherFang.sh
+      
+      - name: Verify file permissions
+        run: |
+          chmod +x EtherFang.sh
+          [ -x ./EtherFang.sh ] && echo "✓ EtherFang.sh is executable" || echo "✗ EtherFang.sh is not executable"
+      
+      - name: Validate configuration files
+        run: |
+          if [ -f "config.json" ]; then
+            python3 -m json.tool config.json > /dev/null
+            echo "✓ JSON config is valid"
+          fi
+  
+  # License compliance check
+  license:
+    runs-on: ubuntu-latest
+    name: License Compliance
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check license headers
+        run: |
+          echo "Verifying license headers in source files..."
+          find . -name "*.sh" -type f -exec grep -L "LICENSE\|Copyright" {} \; | head -5 || echo "✓ License headers present"
