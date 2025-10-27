@@ -1,7 +1,9 @@
 # EtherFang
 > This is a multi-use bash script for Linux systems to audit wireless networks.
 
-![Banner]
+<img width="1344" height="768" alt="EtherFang_banner" src="https://github.com/user-attachments/assets/027948ca-2ae2-464d-810b-347117569725" />
+
+
 
 ---
 
