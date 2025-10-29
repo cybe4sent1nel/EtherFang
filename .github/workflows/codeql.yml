@@ -1,106 +1,105 @@
-name: CodeQL Analysis
-
+name: CodeQL Analysis (DISABLED)
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
-  schedule:
-    - cron: '30 21 * * *'
+  # All triggers disabled - workflow will not run automatically
+  # Uncomment below to re-enable:
+  # push:
+  #   branches: [ main, develop ]
+  # pull_request:
+  #   branches: [ main, develop ]
+  # schedule:
+  #   - cron: '30 21 * * *'
+  workflow_dispatch:  # Keep manual trigger option
 
 permissions:
   contents: read
 
 jobs:
-  bash-analysis:
-    name: Bash Script Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    continue-on-error: true
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install ShellCheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-      
-      - name: Create missing plugin files
-        run: |
-          mkdir -p plugins
-          [ -f plugins/missing_dependencies.sh ] || cat > plugins/missing_dependencies.sh << 'EOF'
-#!/bin/bash
-# EtherFang Plugin - Auto-generated placeholder
-EOF
-          chmod +x plugins/missing_dependencies.sh
-      
-      - name: Run ShellCheck
-        run: |
-          shellcheck -x -f json EtherFang.sh > shellcheck-results.json 2>&1 || true
-          cat shellcheck-results.json || echo "No results"
-      
-      - name: Run advanced bash security checks
-        run: |
-          echo "Running security checks..."
-          grep -rn "eval " EtherFang.sh || echo "✓ No eval found"
-          grep -rn "password.*=" EtherFang.sh | grep -E "'\''|\"" || echo "✓ No hardcoded passwords"
-          true
+  # All security scanning jobs have been disabled
+  # Uncomment individual jobs below to re-enable them
   
-  python-analysis:
-    name: Python Security Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    continue-on-error: true
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      
-      - name: Check for Python files
-        run: |
-          if find . -name "*.py" -type f ! -path "./.git/*" | grep -q .; then
-            echo "Python files found"
-          else
-            echo "No Python files found"
-          fi
-      
-      - name: Install security tools
-        run: |
-          pip install --upgrade pip
-          pip install bandit pylint safety || true
-      
-      - name: Run Bandit
-        run: |
-          if find . -name "*.py" -type f ! -path "./.git/*" | grep -q .; then
-            bandit -r . -f json -o bandit-results.json 2>&1 || true
-            echo "Bandit scan completed"
-          fi
-      
-      - name: Check requirements.txt
-        run: |
-          if [ -f "requirements.txt" ]; then
-            safety check -r requirements.txt 2>&1 || true
-            echo "Requirements checked"
-          fi
+  # bash-analysis:
+  #   name: Bash Script Analysis
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     security-events: write
+  #   continue-on-error: true
+  #   
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Install ShellCheck
+  #       run: sudo apt-get update && sudo apt-get install -y shellcheck
+  #     
+  #     - name: Create missing plugin files
+  #       run: |
+  #         mkdir -p plugins
+  #         [ -f plugins/missing_dependencies.sh ] || cat > plugins/missing_dependencies.sh << 'EOF'
+  # #!/bin/bash
+  # # EtherFang Plugin - Auto-generated placeholder
+  # EOF
+  #         chmod +x plugins/missing_dependencies.sh
+  #     
+  #     - name: Run ShellCheck
+  #       run: |
+  #         shellcheck -x -f json EtherFang.sh > shellcheck-results.json 2>&1 || true
+  #         cat shellcheck-results.json || echo "No results"
+  #     
+  #     - name: Run advanced bash security checks
+  #       run: |
+  #         echo "Running security checks..."
+  #         grep -rn "eval " EtherFang.sh || echo "✓ No eval found"
+  #         grep -rn "password.*=" EtherFang.sh | grep -E "'\''|\"" || echo "✓ No hardcoded passwords"
+  #         true
   
-  summary:
-    name: Security Summary
+  # python-analysis:
+  #   name: Python Security Analysis
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     security-events: write
+  #   continue-on-error: true
+  #   
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.11'
+  #     
+  #     - name: Check for Python files
+  #       run: |
+  #         if find . -name "*.py" -type f ! -path "./.git/*" | grep -q .; then
+  #           echo "Python files found"
+  #         else
+  #           echo "No Python files found"
+  #         fi
+  #     
+  #     - name: Install security tools
+  #       run: |
+  #         pip install --upgrade pip
+  #         pip install bandit pylint safety || true
+  #     
+  #     - name: Run Bandit
+  #       run: |
+  #         if find . -name "*.py" -type f ! -path "./.git/*" | grep -q .; then
+  #           bandit -r . -f json -o bandit-results.json 2>&1 || true
+  #           echo "Bandit scan completed"
+  #         fi
+  #     
+  #     - name: Check requirements.txt
+  #       run: |
+  #         if [ -f "requirements.txt" ]; then
+  #           safety check -r requirements.txt 2>&1 || true
+  #           echo "Requirements checked"
+  #         fi
+  
+  placeholder:
+    name: Workflow Disabled
     runs-on: ubuntu-latest
-    if: always()
-    needs: [bash-analysis, python-analysis]
-    
     steps:
-      - name: Generate summary
+      - name: Notice
         run: |
-          echo "## 🔒 Security Analysis Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Bash Script Analysis (ShellCheck)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Python Security Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Dependency Checks" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ Security scanning is currently disabled"
+          echo "To re-enable, uncomment the jobs in this workflow file"
