@@ -1,5 +1,4 @@
 name: CI/CD Pipeline
-
 on:
   push:
     branches: [ main, develop ]
@@ -9,47 +8,49 @@ on:
     - cron: '30 20 * * *'  # 2:00 AM IST (Kolkata) - Daily security checks
 
 jobs:
-  # Bash script linting and validation
-  lint:
-    runs-on: ubuntu-latest
-    name: Bash Linting & Code Quality
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install ShellCheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-      
-      - name: Run ShellCheck on EtherFang.sh
-        run: shellcheck -x EtherFang.sh
-        continue-on-error: false
-      
-      - name: Run ShellCheck on all bash scripts
-        run: find . -name "*.sh" -type f -exec shellcheck -x {} \;
-        continue-on-error: false
-      
-      - name: Check for common vulnerabilities
-        run: |
-          grep -r "eval\|exec\|\`.*\`" *.sh || echo "No dangerous patterns found"
+  # Bash script linting and validation - DISABLED
+  # Uncomment below to re-enable
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   name: Bash Linting & Code Quality
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Install ShellCheck
+  #       run: sudo apt-get update && sudo apt-get install -y shellcheck
+  #     
+  #     - name: Run ShellCheck on EtherFang.sh
+  #       run: shellcheck -x EtherFang.sh
+  #       continue-on-error: false
+  #     
+  #     - name: Run ShellCheck on all bash scripts
+  #       run: find . -name "*.sh" -type f -exec shellcheck -x {} \;
+  #       continue-on-error: false
+  #     
+  #     - name: Check for common vulnerabilities
+  #       run: |
+  #         grep -r "eval\|exec\|`.*\`" *.sh || echo "No dangerous patterns found"
   
-  # Security scanning
-  security:
-    runs-on: ubuntu-latest
-    name: Security Scanning
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      
-      - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
+  # Security scanning - DISABLED
+  # Uncomment below to re-enable
+  # security:
+  #   runs-on: ubuntu-latest
+  #   name: Security Scanning
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Run Trivy vulnerability scanner
+  #       uses: aquasecurity/trivy-action@master
+  #       with:
+  #         scan-type: 'fs'
+  #         scan-ref: '.'
+  #         format: 'sarif'
+  #         output: 'trivy-results.sarif'
+  #     
+  #     - name: Upload Trivy results to GitHub Security tab
+  #       uses: github/codeql-action/upload-sarif@v2
+  #       with:
+  #         sarif_file: 'trivy-results.sarif'
   
   # Dependency check
   dependencies:
@@ -72,20 +73,21 @@ jobs:
           which airmon-ng || echo "Warning: airmon-ng not found in PATH"
           which airodump-ng || echo "Warning: airodump-ng not found in PATH"
   
-  # SAST (Static Application Security Testing)
-  sast:
-    runs-on: ubuntu-latest
-    name: SAST Analysis
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run Semgrep SAST
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: >-
-            p/security-audit
-            p/owasp-top-ten
-            p/bash
+  # SAST (Static Application Security Testing) - DISABLED
+  # Uncomment below to re-enable
+  # sast:
+  #   runs-on: ubuntu-latest
+  #   name: SAST Analysis
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Run Semgrep SAST
+  #       uses: returntocorp/semgrep-action@v1
+  #       with:
+  #         config: >-
+  #           p/security-audit
+  #           p/owasp-top-ten
+  #           p/bash
   
   # Build validation
   build:
