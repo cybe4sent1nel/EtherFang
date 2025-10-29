@@ -224,7 +224,7 @@ timeout_secs_per_pixiedust="30"
 
 #Repository and contact vars
 repository_hostname="github.com"
-github_user="fahadkhanxyz8816-crypto1sh3r3"
+github_user="cybe4sent1nel"
 github_repository="EtherFang"
 branch="master"
 script_filename="EtherFang.sh"
@@ -235,9 +235,8 @@ urlscript_pins_dbfile_checksum="https://raw.githubusercontent.com/${github_user}
 urlscript_language_strings_file="https://raw.githubusercontent.com/${github_user}/${github_repository}/${branch}/${language_strings_file}"
 urlscript_options_config_file="https://raw.githubusercontent.com/${github_user}/${github_repository}/${branch}/${rc_file_name}"
 urlgithub_wiki="https://${repository_hostname}/${github_user}/${github_repository}/wiki"
-urlmerchandising_shop="https://EtherFang.creator-spring.com/"
-mail="fahadkhanxyz8816-crypto.1s.h3r3@gmail.com"
-author="fahadkhanxyz8816-crypto"
+mail="fahd.64.in.com"
+author="cybe4sent1nel"
 wpa3_online_attack_plugin_repo="https://${repository_hostname}/OscarAkaElvis/EtherFang-plugins"
 wpa3_dragon_drain_plugin_repo="https://${repository_hostname}/Janek79ax/dragon-drain-wpa3-EtherFang-plugin"
 
@@ -361,14 +360,7 @@ known_arm_compatible_distros=(
 
 #Sponsors
 sponsors=(
-		"IZHARUL HUDA KHAN"
-		"RIZWANA KHAN"
-		"HERA KHAN"
-		"HENA KHAN"
-		"RIDA KHAN"
-		"NEHA KHAN"
-                "SANA KHAN"
-                "FAISAL KHAN"
+		"MY FAMILY"
 		)
 
 #Hint vars
