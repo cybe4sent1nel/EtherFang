@@ -3,7 +3,7 @@
 # Get absolute paths
 REPO_PATH="$(cd "$(dirname "$0")" && pwd)"
 TARGET_SCRIPT="$REPO_PATH/EtherFang.sh"
-ICON_PATH="$REPO_PATH/imgs/assets/icon.png"
+ICON_PATH="$REPO_PATH/imgs/icons/icon.png"
 
 # Resolve real user home directory (even if run with sudo)
 USER_HOME="${SUDO_USER:+$(getent passwd "$SUDO_USER" | cut -d: -f6)}"
