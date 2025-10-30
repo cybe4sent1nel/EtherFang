@@ -4,7 +4,11 @@
 REPO_PATH="$(cd "$(dirname "$0")" && pwd)"
 TARGET_SCRIPT="$REPO_PATH/EtherFang.sh"
 ICON_PATH="$REPO_PATH/imgs/assets/icon.png"
-DESKTOP_FILE="$HOME/.local/share/applications/EtherFang.desktop"
+
+# Resolve real user home directory (even if run with sudo)
+USER_HOME="${SUDO_USER:+$(getent passwd "$SUDO_USER" | cut -d: -f6)}"
+USER_HOME="${USER_HOME:-$HOME}"
+DESKTOP_FILE="$USER_HOME/.local/share/applications/EtherFang.desktop"
 
 echo "🔧 Setting up EtherFang..."
 
@@ -16,7 +20,7 @@ echo "🔗 Creating symlink at /usr/local/bin/etherfang..."
 sudo ln -sf "$TARGET_SCRIPT" /usr/local/bin/etherfang
 
 # Add aliases to shell configs
-for SHELL_RC in "$HOME/.bashrc" "$HOME/.zshrc"; do
+for SHELL_RC in "$USER_HOME/.bashrc" "$USER_HOME/.zshrc"; do
   if [ -f "$SHELL_RC" ]; then
     {
       echo ""
@@ -30,7 +34,7 @@ for SHELL_RC in "$HOME/.bashrc" "$HOME/.zshrc"; do
 done
 
 # Ensure applications directory exists
-mkdir -p "$HOME/.local/share/applications/"
+mkdir -p "$(dirname "$DESKTOP_FILE")"
 
 # Create .desktop entry for app menu
 echo "🖼️ Installing EtherFang to application menu..."
@@ -46,7 +50,7 @@ Categories=Security;Network;Utility;
 EOF
 
 # Refresh desktop database (optional)
-update-desktop-database ~/.local/share/applications/ 2>/dev/null
+update-desktop-database "$USER_HOME/.local/share/applications/" 2>/dev/null
 
 echo "🎉 Setup complete! You can now run EtherFang using:"
 echo "    etherfang, EtherFang, or ETHERFANG"
