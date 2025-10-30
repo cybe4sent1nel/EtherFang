@@ -1,4 +1,9 @@
 # EtherFang
+> This is a multi-use bash script for Linux systems to audit wireless networks.
+
+<img width="1344" height="768" alt="EtherFang_banner" src="https://github.com/user-attachments/assets/027948ca-2ae2-464d-810b-347117569725" />
+
+
 ## 🚀 Quick Setup
 
 After cloning the repo:
@@ -6,12 +11,6 @@ After cloning the repo:
 ```bash
 cd EtherFang
 ./install.sh
-> This is a multi-use bash script for Linux systems to audit wireless networks.
-
-<img width="1344" height="768" alt="EtherFang_banner" src="https://github.com/user-attachments/assets/027948ca-2ae2-464d-810b-347117569725" />
-
-
-
 ---
 
 All the needed info about how to "install | use | enjoy" `EtherFang` is present at [GitHub's Wiki].
