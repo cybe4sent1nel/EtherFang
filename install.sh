@@ -29,6 +29,9 @@ for SHELL_RC in "$HOME/.bashrc" "$HOME/.zshrc"; do
   fi
 done
 
+# Ensure applications directory exists
+mkdir -p "$HOME/.local/share/applications/"
+
 # Create .desktop entry for app menu
 echo "🖼️ Installing EtherFang to application menu..."
 cat > "$DESKTOP_FILE" <<EOF
