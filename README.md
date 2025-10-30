@@ -6,9 +6,9 @@
 
 ## 🚀 Quick Setup
 
-After cloning the repo:
+#After cloning the repo:
 
-```bash
+#```bash
 cd EtherFang
 ./install.sh
 ---
