@@ -1,3 +1,4 @@
+[![TryHackMe Badge](https://tryhackme-badges.s3.amazonaws.com/fahadkhanxyz8816.png)](https://tryhackme.com/p/fahadkhanxyz8816)
 # EtherFang
 > This is a multi-use bash script for Linux systems to audit wireless networks.
 
